@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const Turno = require("../models/Turno");
+const verificarToken = require("../middleware/auth");
 
 // POST - Crear turno
-router.post("/", async (req, res) => {
+router.post("/", verificarToken, async (req, res) => {
   try {
     const { nombreCliente, servicio, fecha, hora } = req.body || {};
 

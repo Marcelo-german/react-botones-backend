@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const serviciosRouter = require("./routes/servicios");
 const turnosRouter = require("./routes/turnos");
+const authRouter = require("./routes/auth");
 
 const app = express();
 const PORT = 4000;
@@ -30,6 +31,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/servicios", serviciosRouter);
 app.use("/api/turnos", turnosRouter);
+app.use("/api/auth", authRouter);
 
 // ================================
 // 4. CONEXIÓN A MONGODB
