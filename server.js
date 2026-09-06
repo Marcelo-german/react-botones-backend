@@ -119,6 +119,16 @@ app.delete("/api/servicios/:id", async (req, res) => {
 // POST - Crear turno
 app.post("/api/turnos", async (req, res) => {
   try {
+    const { nombreCliente, servicio, fecha, hora } = req.body;
+
+    const turnoExistente = await Turno.findOne({ fecha, hora });
+
+    if (turnoExistente) {
+      return res.status(400).json({
+        mensaje: "Ya existe un turno para esa fecha y hora",
+      });
+    }
+
     const nuevoTurno = await Turno.create(req.body);
 
     res.status(201).json(nuevoTurno);
