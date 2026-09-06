@@ -5,7 +5,13 @@ const Turno = require("../models/Turno");
 // POST - Crear turno
 router.post("/", async (req, res) => {
   try {
-    const { fecha, hora } = req.body;
+    const { nombreCliente, servicio, fecha, hora } = req.body || {};
+
+    if (!nombreCliente || !servicio || !fecha || !hora) {
+      return res.status(400).json({
+        mensaje: "Todos los campos son obligatorios",
+      });
+    }
 
     const turnoExistente = await Turno.findOne({ fecha, hora });
 
