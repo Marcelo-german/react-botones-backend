@@ -32,6 +32,74 @@ router.post("/", verificarToken, async (req, res) => {
   }
 });
 
+// GET - Horarios disponibles
+router.get("/disponibles", async (req, res) => {
+  try {
+    const { fecha, servicioId } = req.query;
+
+    if (!fecha || !servicioId) {
+      return res.status(400).json({
+        mensaje: "Fecha y servicioId son obligatorios",
+      });
+    }
+
+    // 1. Traer el servicio para saber la duración
+    const Servicio = require("../models/Servicio");
+    const servicio = await Servicio.findById(servicioId);
+
+    if (!servicio) {
+      return res.status(404).json({ mensaje: "Servicio no encontrado" });
+    }
+
+    // 2. Generar todos los slots del día (09:00 a 17:00 cada 30 min)
+    const slots = [];
+    for (let hora = 9; hora < 17; hora++) {
+      slots.push(`${String(hora).padStart(2, "0")}:00`);
+      slots.push(`${String(hora).padStart(2, "0")}:30`);
+    }
+
+    // 3. Traer los turnos ya reservados para esa fecha
+    const turnosDelDia = await Turno.find({ fecha });
+
+    // 4. Calcular cuántos slots bloquea este servicio
+    const slotsQueBloquea = servicio.duracion / 30;
+
+    // 5. Filtrar slots ocupados
+    const horariosOcupados = new Set();
+    turnosDelDia.forEach((turno) => {
+      const indexSlot = slots.indexOf(turno.hora);
+      for (let i = 0; i < slotsQueBloquea; i++) {
+        if (slots[indexSlot + i]) {
+          horariosOcupados.add(slots[indexSlot + i]);
+        }
+      }
+    });
+
+    // 6. Filtrar slots disponibles según duración del servicio
+    const horariosDisponibles = slots.filter((slot, index) => {
+      if (horariosOcupados.has(slot)) return false;
+      for (let i = 1; i < slotsQueBloquea; i++) {
+        if (!slots[index + i] || horariosOcupados.has(slots[index + i])) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    res.json({
+      fecha,
+      servicio: servicio.nombre,
+      duracion: servicio.duracion,
+      horariosDisponibles,
+    });
+  } catch (error) {
+    res.status(500).json({
+      mensaje: "Error al obtener horarios disponibles",
+      error: error.message,
+    });
+  }
+});
+
 // GET - Obtener turnos
 router.get("/", async (req, res) => {
   try {
