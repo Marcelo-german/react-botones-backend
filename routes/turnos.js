@@ -152,4 +152,42 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// PATCH - Cambiar estado del turno
+router.patch("/:id/estado", verificarToken, async (req, res) => {
+  try {
+    const { estado } = req.body || {};
+
+    if (!estado) {
+      return res.status(400).json({
+        mensaje: "El estado es obligatorio",
+      });
+    }
+
+    const estadosValidos = ["pendiente", "confirmado", "cancelado"];
+
+    if (!estadosValidos.includes(estado)) {
+      return res.status(400).json({
+        mensaje: "Estado inválido. Use: pendiente, confirmado o cancelado",
+      });
+    }
+
+    const turnoActualizado = await Turno.findByIdAndUpdate(
+      req.params.id,
+      { estado },
+      { returnDocument: "after" },
+    );
+
+    if (!turnoActualizado) {
+      return res.status(404).json({ mensaje: "Turno no encontrado" });
+    }
+
+    res.json(turnoActualizado);
+  } catch (error) {
+    res.status(500).json({
+      mensaje: "Error al actualizar el estado",
+      error: error.message,
+    });
+  }
+});
+
 module.exports = router;

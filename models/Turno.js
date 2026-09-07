@@ -23,6 +23,13 @@ const turnoSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    // 1. ESTADO DEL TURNO
+    estado: {
+      type: String,
+      enum: ["pendiente", "confirmado", "cancelado"],
+      default: "pendiente",
+    },
   },
   {
     timestamps: true,
