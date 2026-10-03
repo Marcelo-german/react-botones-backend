@@ -30,6 +30,13 @@ const turnoSchema = new mongoose.Schema(
       enum: ["pendiente", "confirmado", "cancelado"],
       default: "pendiente",
     },
+
+    // 2. USUARIO QUE CREÓ EL TURNO
+    usuario: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Usuario",
+      required: true,
+    },
   },
   {
     timestamps: true,

@@ -22,7 +22,12 @@ router.post("/", verificarToken, async (req, res) => {
       });
     }
 
-    const nuevoTurno = await Turno.create(req.body);
+    // 1. GUARDAR EL USUARIO DEL TOKEN
+    const nuevoTurno = await Turno.create({
+      ...req.body,
+      usuario: req.usuario.id,
+    });
+
     res.status(201).json(nuevoTurno);
   } catch (error) {
     res.status(400).json({
@@ -43,7 +48,6 @@ router.get("/disponibles", async (req, res) => {
       });
     }
 
-    // 1. Traer el servicio para saber la duración
     const Servicio = require("../models/Servicio");
     const servicio = await Servicio.findById(servicioId);
 
@@ -51,20 +55,15 @@ router.get("/disponibles", async (req, res) => {
       return res.status(404).json({ mensaje: "Servicio no encontrado" });
     }
 
-    // 2. Generar todos los slots del día (09:00 a 17:00 cada 30 min)
     const slots = [];
     for (let hora = 9; hora < 17; hora++) {
       slots.push(`${String(hora).padStart(2, "0")}:00`);
       slots.push(`${String(hora).padStart(2, "0")}:30`);
     }
 
-    // 3. Traer los turnos ya reservados para esa fecha
     const turnosDelDia = await Turno.find({ fecha });
-
-    // 4. Calcular cuántos slots bloquea este servicio
     const slotsQueBloquea = servicio.duracion / 30;
 
-    // 5. Filtrar slots ocupados
     const horariosOcupados = new Set();
     turnosDelDia.forEach((turno) => {
       const indexSlot = slots.indexOf(turno.hora);
@@ -75,7 +74,6 @@ router.get("/disponibles", async (req, res) => {
       }
     });
 
-    // 6. Filtrar slots disponibles según duración del servicio
     const horariosDisponibles = slots.filter((slot, index) => {
       if (horariosOcupados.has(slot)) return false;
       for (let i = 1; i < slotsQueBloquea; i++) {
@@ -95,6 +93,22 @@ router.get("/disponibles", async (req, res) => {
   } catch (error) {
     res.status(500).json({
       mensaje: "Error al obtener horarios disponibles",
+      error: error.message,
+    });
+  }
+});
+
+// GET - Mis turnos
+router.get("/mis-turnos", verificarToken, async (req, res) => {
+  try {
+    const turnos = await Turno.find({ usuario: req.usuario.id })
+      .populate("servicio")
+      .sort({ fecha: 1, hora: 1 });
+
+    res.json(turnos);
+  } catch (error) {
+    res.status(500).json({
+      mensaje: "Error al obtener tus turnos",
       error: error.message,
     });
   }
