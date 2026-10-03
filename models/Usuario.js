@@ -23,6 +23,13 @@ const usuarioSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    // 4. ROL DEL USUARIO
+    rol: {
+      type: String,
+      enum: ["admin", "cliente"],
+      default: "cliente",
+    },
   },
   {
     timestamps: true,

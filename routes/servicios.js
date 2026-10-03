@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const Servicio = require("../models/Servicio");
+const { verificarToken, verificarRol } = require("../middleware/auth");
 
-// GET - Obtener servicios
+// GET - Obtener servicios (público, cualquiera puede ver)
 router.get("/", async (req, res) => {
   try {
     const { categoria } = req.query;
@@ -17,8 +18,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-// POST - Crear servicio
-router.post("/", async (req, res) => {
+// POST - Crear servicio (solo admin)
+router.post("/", verificarToken, verificarRol("admin"), async (req, res) => {
   try {
     const nuevoServicio = await Servicio.create(req.body);
     res.status(201).json(nuevoServicio);
@@ -30,8 +31,8 @@ router.post("/", async (req, res) => {
   }
 });
 
-// PUT - Actualizar servicio
-router.put("/:id", async (req, res) => {
+// PUT - Actualizar servicio (solo admin)
+router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
   try {
     const servicioActualizado = await Servicio.findByIdAndUpdate(
       req.params.id,
@@ -50,23 +51,28 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// DELETE - Eliminar servicio
-router.delete("/:id", async (req, res) => {
-  try {
-    const servicioEliminado = await Servicio.findByIdAndDelete(req.params.id);
-    if (!servicioEliminado) {
-      return res.status(404).json({ mensaje: "Servicio no encontrado" });
+// DELETE - Eliminar servicio (solo admin)
+router.delete(
+  "/:id",
+  verificarToken,
+  verificarRol("admin"),
+  async (req, res) => {
+    try {
+      const servicioEliminado = await Servicio.findByIdAndDelete(req.params.id);
+      if (!servicioEliminado) {
+        return res.status(404).json({ mensaje: "Servicio no encontrado" });
+      }
+      res.json({
+        mensaje: "Servicio eliminado correctamente",
+        servicio: servicioEliminado,
+      });
+    } catch (error) {
+      res.status(400).json({
+        mensaje: "Error al eliminar el servicio",
+        error: error.message,
+      });
     }
-    res.json({
-      mensaje: "Servicio eliminado correctamente",
-      servicio: servicioEliminado,
-    });
-  } catch (error) {
-    res.status(400).json({
-      mensaje: "Error al eliminar el servicio",
-      error: error.message,
-    });
-  }
-});
+  },
+);
 
 module.exports = router;
