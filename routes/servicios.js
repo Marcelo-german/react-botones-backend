@@ -2,8 +2,9 @@ const express = require("express");
 const router = express.Router();
 const Servicio = require("../models/Servicio");
 const { verificarToken, verificarRol } = require("../middleware/auth");
+const upload = require("../middleware/upload");
 
-// GET - Obtener servicios (público, cualquiera puede ver)
+// GET - Obtener servicios (público)
 router.get("/", async (req, res) => {
   try {
     const { categoria } = req.query;
@@ -30,6 +31,43 @@ router.post("/", verificarToken, verificarRol("admin"), async (req, res) => {
     });
   }
 });
+
+// POST - Subir imagen de servicio (solo admin)
+router.post(
+  "/:id/imagen",
+  verificarToken,
+  verificarRol("admin"),
+  upload.single("imagen"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          mensaje: "No se subió ninguna imagen",
+        });
+      }
+
+      const servicioActualizado = await Servicio.findByIdAndUpdate(
+        req.params.id,
+        { imagen: req.file.filename },
+        { returnDocument: "after" },
+      );
+
+      if (!servicioActualizado) {
+        return res.status(404).json({ mensaje: "Servicio no encontrado" });
+      }
+
+      res.json({
+        mensaje: "Imagen subida correctamente",
+        servicio: servicioActualizado,
+      });
+    } catch (error) {
+      res.status(500).json({
+        mensaje: "Error al subir la imagen",
+        error: error.message,
+      });
+    }
+  },
+);
 
 // PUT - Actualizar servicio (solo admin)
 router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {

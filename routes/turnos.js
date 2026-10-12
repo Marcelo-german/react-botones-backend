@@ -1,7 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const Turno = require("../models/Turno");
+const Servicio = require("../models/Servicio");
+const Usuario = require("../models/Usuario");
 const { verificarToken, verificarRol } = require("../middleware/auth");
+const { enviarConfirmacionTurno } = require("../middleware/email");
 
 // POST - Crear turno
 router.post("/", verificarToken, async (req, res) => {
@@ -28,6 +31,22 @@ router.post("/", verificarToken, async (req, res) => {
       usuario: req.usuario.id,
     });
 
+    // 2. ENVIAR EMAIL DE CONFIRMACIÓN
+    try {
+      const servicioData = await Servicio.findById(servicio);
+      const usuarioData = await Usuario.findById(req.usuario.id);
+
+      if (servicioData && usuarioData) {
+        await enviarConfirmacionTurno(
+          nuevoTurno,
+          servicioData,
+          usuarioData.email,
+        );
+      }
+    } catch (emailError) {
+      console.error("Error al enviar email:", emailError.message);
+    }
+
     res.status(201).json(nuevoTurno);
   } catch (error) {
     res.status(400).json({
@@ -48,7 +67,6 @@ router.get("/disponibles", async (req, res) => {
       });
     }
 
-    const Servicio = require("../models/Servicio");
     const servicio = await Servicio.findById(servicioId);
 
     if (!servicio) {

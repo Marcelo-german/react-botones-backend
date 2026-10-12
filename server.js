@@ -8,7 +8,7 @@ const turnosRouter = require("./routes/turnos");
 const authRouter = require("./routes/auth");
 
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
 // ================================
 // 1. MIDDLEWARES
@@ -16,6 +16,9 @@ const PORT = 4000;
 
 app.use(express.json());
 app.use(cors());
+
+// 1.1 ARCHIVOS ESTÁTICOS
+app.use("/uploads", express.static("uploads"));
 
 // ================================
 // 2. RUTA PRINCIPAL

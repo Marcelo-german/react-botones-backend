@@ -26,6 +26,12 @@ const servicioSchema = new mongoose.Schema(
       trim: true,
       enum: ["peluqueria", "unas", "masajes"],
     },
+
+    // 1. IMAGEN DEL SERVICIO
+    imagen: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,
