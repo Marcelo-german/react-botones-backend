@@ -1,6 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
 const serviciosRouter = require("./routes/servicios");
@@ -14,10 +16,32 @@ const PORT = process.env.PORT || 4000;
 // 1. MIDDLEWARES
 // ================================
 
+// 1.1 SEGURIDAD
+app.use(helmet());
+
+// 1.2 RATE LIMITING
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // máximo 100 requests por IP
+  message: {
+    mensaje: "Demasiadas requests. Intentá de nuevo en 15 minutos.",
+  },
+});
+app.use(limiter);
+
+// 1.3 RATE LIMITING ESTRICTO PARA AUTH
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10, // solo 10 intentos de login por IP
+  message: {
+    mensaje: "Demasiados intentos. Intentá de nuevo en 15 minutos.",
+  },
+});
+
 app.use(express.json());
 app.use(cors());
 
-// 1.1 ARCHIVOS ESTÁTICOS
+// 1.4 ARCHIVOS ESTÁTICOS
 app.use("/uploads", express.static("uploads"));
 
 // ================================
@@ -34,7 +58,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/servicios", serviciosRouter);
 app.use("/api/turnos", turnosRouter);
-app.use("/api/auth", authRouter);
+app.use("/api/auth", authLimiter, authRouter);
 
 // ================================
 // 4. CONEXIÓN A MONGODB
