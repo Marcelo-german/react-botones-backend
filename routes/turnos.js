@@ -67,6 +67,14 @@ router.get("/disponibles", async (req, res) => {
       });
     }
 
+    // 1. VALIDACIÓN FIN DE SEMANA
+    const diaSemana = new Date(fecha + "T00:00:00").getDay();
+    if (diaSemana === 0 || diaSemana === 6) {
+      return res.status(400).json({
+        mensaje: "No hay turnos disponibles los fines de semana",
+      });
+    }
+
     const servicio = await Servicio.findById(servicioId);
 
     if (!servicio) {
