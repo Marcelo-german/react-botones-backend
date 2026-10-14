@@ -143,8 +143,34 @@ router.get("/mis-turnos", verificarToken, async (req, res) => {
 // GET - Obtener turnos
 router.get("/", async (req, res) => {
   try {
-    const turnos = await Turno.find().populate("servicio");
-    res.json(turnos);
+    // 1. PAGINACIÓN
+    const pagina = parseInt(req.query.pagina) || 1;
+    const limite = parseInt(req.query.limite) || 10;
+    const saltar = (pagina - 1) * limite;
+
+    // 2. FILTROS
+    const filtro = {};
+    if (req.query.fecha) filtro.fecha = req.query.fecha;
+    if (req.query.estado) filtro.estado = req.query.estado;
+    if (req.query.nombreCliente) {
+      filtro.nombreCliente = {
+        $regex: req.query.nombreCliente,
+        $options: "i",
+      };
+    }
+
+    const total = await Turno.countDocuments(filtro);
+    const turnos = await Turno.find(filtro)
+      .populate("servicio")
+      .skip(saltar)
+      .limit(limite);
+
+    res.json({
+      turnos,
+      total,
+      pagina,
+      totalPaginas: Math.ceil(total / limite),
+    });
   } catch (error) {
     res.status(500).json({
       mensaje: "Error al obtener los turnos",
