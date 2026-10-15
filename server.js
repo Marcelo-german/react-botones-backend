@@ -5,6 +5,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
 require("dotenv").config();
+const estadisticasRouter = require("./routes/estadisticas");
 
 const serviciosRouter = require("./routes/servicios");
 const turnosRouter = require("./routes/turnos");
@@ -63,6 +64,7 @@ app.get("/", (req, res) => {
 app.use("/api/servicios", serviciosRouter);
 app.use("/api/turnos", turnosRouter);
 app.use("/api/auth", authLimiter, authRouter);
+app.use("/api/estadisticas", estadisticasRouter);
 
 // ================================
 // 4. CONEXIÓN A MONGODB
