@@ -256,4 +256,38 @@ router.patch("/:id/estado", verificarToken, async (req, res) => {
   }
 });
 
+// PATCH - Cancelar turno propio
+router.patch("/:id/cancelar", verificarToken, async (req, res) => {
+  try {
+    const turno = await Turno.findById(req.params.id);
+
+    if (!turno) {
+      return res.status(404).json({
+        mensaje: "Turno no encontrado",
+      });
+    }
+
+    // 1. VERIFICAR QUE EL TURNO PERTENECE AL USUARIO
+    if (turno.usuario.toString() !== req.usuario.id) {
+      return res.status(403).json({
+        mensaje: "No tenés permiso para cancelar este turno",
+      });
+    }
+
+    // 2. CANCELAR EL TURNO
+    turno.estado = "cancelado";
+    await turno.save();
+
+    res.json({
+      mensaje: "Turno cancelado correctamente",
+      turno,
+    });
+  } catch (error) {
+    res.status(500).json({
+      mensaje: "Error al cancelar el turno",
+      error: error.message,
+    });
+  }
+});
+
 module.exports = router;
