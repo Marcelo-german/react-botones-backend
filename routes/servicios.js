@@ -1,116 +1,34 @@
 const express = require("express");
 const router = express.Router();
-const Servicio = require("../models/Servicio");
 const { verificarToken, verificarRol } = require("../middleware/auth");
 const upload = require("../middleware/upload");
+const {
+  obtenerServicios,
+  crearServicio,
+  subirImagen,
+  actualizarServicio,
+  eliminarServicio,
+} = require("../controllers/servicios");
 
 // GET - Obtener servicios (público)
-router.get("/", async (req, res) => {
-  try {
-    const { categoria } = req.query;
-    const filtro = categoria ? { categoria } : {};
-    const servicios = await Servicio.find(filtro);
-    res.json(servicios);
-  } catch (error) {
-    res.status(500).json({
-      mensaje: "Error al obtener los servicios",
-      error: error.message,
-    });
-  }
-});
+router.get("/", obtenerServicios);
 
 // POST - Crear servicio (solo admin)
-router.post("/", verificarToken, verificarRol("admin"), async (req, res) => {
-  try {
-    const nuevoServicio = await Servicio.create(req.body);
-    res.status(201).json(nuevoServicio);
-  } catch (error) {
-    res.status(400).json({
-      mensaje: "Error al crear el servicio",
-      error: error.message,
-    });
-  }
-});
+router.post("/", verificarToken, verificarRol("admin"), crearServicio);
 
-// POST - Subir imagen de servicio (solo admin)
+// POST - Subir imagen (solo admin)
 router.post(
   "/:id/imagen",
   verificarToken,
   verificarRol("admin"),
   upload.single("imagen"),
-  async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({
-          mensaje: "No se subió ninguna imagen",
-        });
-      }
-
-      const servicioActualizado = await Servicio.findByIdAndUpdate(
-        req.params.id,
-        { imagen: req.file.filename },
-        { returnDocument: "after" },
-      );
-
-      if (!servicioActualizado) {
-        return res.status(404).json({ mensaje: "Servicio no encontrado" });
-      }
-
-      res.json({
-        mensaje: "Imagen subida correctamente",
-        servicio: servicioActualizado,
-      });
-    } catch (error) {
-      res.status(500).json({
-        mensaje: "Error al subir la imagen",
-        error: error.message,
-      });
-    }
-  },
+  subirImagen,
 );
 
 // PUT - Actualizar servicio (solo admin)
-router.put("/:id", verificarToken, verificarRol("admin"), async (req, res) => {
-  try {
-    const servicioActualizado = await Servicio.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { returnDocument: "after", runValidators: true },
-    );
-    if (!servicioActualizado) {
-      return res.status(404).json({ mensaje: "Servicio no encontrado" });
-    }
-    res.json(servicioActualizado);
-  } catch (error) {
-    res.status(400).json({
-      mensaje: "Error al actualizar el servicio",
-      error: error.message,
-    });
-  }
-});
+router.put("/:id", verificarToken, verificarRol("admin"), actualizarServicio);
 
 // DELETE - Eliminar servicio (solo admin)
-router.delete(
-  "/:id",
-  verificarToken,
-  verificarRol("admin"),
-  async (req, res) => {
-    try {
-      const servicioEliminado = await Servicio.findByIdAndDelete(req.params.id);
-      if (!servicioEliminado) {
-        return res.status(404).json({ mensaje: "Servicio no encontrado" });
-      }
-      res.json({
-        mensaje: "Servicio eliminado correctamente",
-        servicio: servicioEliminado,
-      });
-    } catch (error) {
-      res.status(400).json({
-        mensaje: "Error al eliminar el servicio",
-        error: error.message,
-      });
-    }
-  },
-);
+router.delete("/:id", verificarToken, verificarRol("admin"), eliminarServicio);
 
 module.exports = router;
