@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
+const morgan = require("morgan");
 require("dotenv").config();
 
 const serviciosRouter = require("./routes/servicios");
@@ -16,23 +17,26 @@ const PORT = process.env.PORT || 4000;
 // 1. MIDDLEWARES
 // ================================
 
-// 1.1 SEGURIDAD
+// 1.1 LOGS
+app.use(morgan("dev"));
+
+// 1.2 SEGURIDAD
 app.use(helmet());
 
-// 1.2 RATE LIMITING
+// 1.3 RATE LIMITING
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // máximo 100 requests por IP
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: {
     mensaje: "Demasiadas requests. Intentá de nuevo en 15 minutos.",
   },
 });
 app.use(limiter);
 
-// 1.3 RATE LIMITING ESTRICTO PARA AUTH
+// 1.4 RATE LIMITING ESTRICTO PARA AUTH
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10, // solo 10 intentos de login por IP
+  max: 10,
   message: {
     mensaje: "Demasiados intentos. Intentá de nuevo en 15 minutos.",
   },
@@ -41,7 +45,7 @@ const authLimiter = rateLimit({
 app.use(express.json());
 app.use(cors());
 
-// 1.4 ARCHIVOS ESTÁTICOS
+// 1.5 ARCHIVOS ESTÁTICOS
 app.use("/uploads", express.static("uploads"));
 
 // ================================
