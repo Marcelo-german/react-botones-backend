@@ -5,11 +5,12 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
 require("dotenv").config();
-const estadisticasRouter = require("./routes/estadisticas");
 
 const serviciosRouter = require("./routes/servicios");
 const turnosRouter = require("./routes/turnos");
 const authRouter = require("./routes/auth");
+const estadisticasRouter = require("./routes/estadisticas");
+const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -67,7 +68,13 @@ app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/estadisticas", estadisticasRouter);
 
 // ================================
-// 4. CONEXIÓN A MONGODB
+// 4. MANEJO DE ERRORES
+// ================================
+
+app.use(errorHandler);
+
+// ================================
+// 5. CONEXIÓN A MONGODB
 // ================================
 
 const iniciarServidor = async () => {
