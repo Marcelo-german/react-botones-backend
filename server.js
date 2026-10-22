@@ -5,6 +5,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
 require("dotenv").config();
+const usuariosRouter = require("./routes/usuarios");
 
 const serviciosRouter = require("./routes/servicios");
 const turnosRouter = require("./routes/turnos");
@@ -66,6 +67,7 @@ app.use("/api/servicios", serviciosRouter);
 app.use("/api/turnos", turnosRouter);
 app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/estadisticas", estadisticasRouter);
+app.use("/api/usuarios", usuariosRouter);
 
 // ================================
 // 4. MANEJO DE ERRORES
